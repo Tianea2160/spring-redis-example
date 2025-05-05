@@ -4,63 +4,75 @@ services:
   redis-master:
     image: redis:7.4
     container_name: redis-master
-    network_mode: "host"
+    networks:
+      - redis-net
     command: [ "redis-server", "/usr/local/etc/redis/redis-master.conf", "--requirepass", "test1234" ]
     volumes:
       - ./redis-master.conf:/usr/local/etc/redis/redis-master.conf
-
+    ports:
+      - "6379:6379"
   redis-slave-1:
     image: redis:7.4
     container_name: redis-slave-1
-    network_mode: "host"
+    networks:
+      - redis-net
     command: [ "redis-server", "/usr/local/etc/redis/redis-slave-1.conf", "--requirepass", "test1234" ]
     depends_on:
       - redis-master
     volumes:
       - ./redis-slave-1.conf:/usr/local/etc/redis/redis-slave-1.conf
-
+    ports:
+      - "6380:6380"
   redis-slave-2:
     image: redis:7.4
     container_name: redis-slave-2
-    network_mode: "host"
+    networks:
+      - redis-net
     command: [ "redis-server", "/usr/local/etc/redis/redis-slave-2.conf", "--requirepass", "test1234" ]
     depends_on:
       - redis-master
     volumes:
       - ./redis-slave-2.conf:/usr/local/etc/redis/redis-slave-2.conf
-
+    ports:
+      - "6381:6381"
   redis-sentinel-1:
-    build:
-      context: .
-      dockerfile: ./Dockerfile
+    image: redis:7.4
     container_name: redis-sentinel-1
-    network_mode: "host"
-    command: [ "sudo", "redis-server", "/usr/local/etc/redis/redis-sentinel-1.conf", "--sentinel" ]
+    networks:
+      - redis-net
+    command: [ "redis-server", "/usr/local/etc/redis/redis-sentinel-1.conf", "--sentinel" ]
     depends_on:
       - redis-master
     volumes:
       - ./redis-sentinel-1.conf:/usr/local/etc/redis/redis-sentinel-1.conf
+    ports:
+      - "5001:26379"
 
   redis-sentinel-2:
-    build:
-      context: .
-      dockerfile: ./Dockerfile
+    image: redis:7.4
     container_name: redis-sentinel-2
-    network_mode: "host"
-    command: [ "sudo", "redis-server", "/usr/local/etc/redis/redis-sentinel-2.conf", "--sentinel" ]
+    networks:
+      - redis-net
+    command: [ "redis-server", "/usr/local/etc/redis/redis-sentinel-2.conf", "--sentinel" ]
     depends_on:
       - redis-master
     volumes:
       - ./redis-sentinel-2.conf:/usr/local/etc/redis/redis-sentinel-2.conf
+    ports:
+      - "5002:26379"
 
   redis-sentinel-3:
-    build:
-      context: .
-      dockerfile: ./Dockerfile
+    image: redis:7.4
     container_name: redis-sentinel-3
-    network_mode: "host"
-    command: [ "sudo",  "redis-server", "/usr/local/etc/redis/redis-sentinel-3.conf", "--sentinel" ]
+    networks:
+      - redis-net
+    command: [ "redis-server", "/usr/local/etc/redis/redis-sentinel-3.conf", "--sentinel" ]
     depends_on:
       - redis-master
     volumes:
       - ./redis-sentinel-3.conf:/usr/local/etc/redis/redis-sentinel-3.conf
+    ports:
+      - "5003:26379"
+networks:
+  redis-net:
+    driver: bridge
