@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   redis-master:
-    image: redis:7
+    image: redis:7.4
     container_name: redis-master
     network_mode: "host"
     command: [ "redis-server", "/usr/local/etc/redis/redis-master.conf", "--requirepass", "test1234" ]
@@ -10,7 +10,7 @@ services:
       - ./redis-master.conf:/usr/local/etc/redis/redis-master.conf
 
   redis-slave-1:
-    image: redis:7
+    image: redis:7.4
     container_name: redis-slave-1
     network_mode: "host"
     command: [ "redis-server", "/usr/local/etc/redis/redis-slave-1.conf", "--requirepass", "test1234" ]
@@ -20,7 +20,7 @@ services:
       - ./redis-slave-1.conf:/usr/local/etc/redis/redis-slave-1.conf
 
   redis-slave-2:
-    image: redis:7
+    image: redis:7.4
     container_name: redis-slave-2
     network_mode: "host"
     command: [ "redis-server", "/usr/local/etc/redis/redis-slave-2.conf", "--requirepass", "test1234" ]
@@ -30,7 +30,9 @@ services:
       - ./redis-slave-2.conf:/usr/local/etc/redis/redis-slave-2.conf
 
   redis-sentinel-1:
-    image: redis:7
+    build:
+      context: .
+      dockerfile: ./Dockerfile
     container_name: redis-sentinel-1
     network_mode: "host"
     command: [ "redis-server", "/usr/local/etc/redis/redis-sentinel-1.conf", "--sentinel" ]
@@ -38,9 +40,12 @@ services:
       - redis-master
     volumes:
       - ./redis-sentinel-1.conf:/usr/local/etc/redis/redis-sentinel-1.conf
+      - ./sentinel-data-1:/data
 
   redis-sentinel-2:
-    image: redis:7
+    build:
+      context: .
+      dockerfile: ./Dockerfile
     container_name: redis-sentinel-2
     network_mode: "host"
     command: [ "redis-server", "/usr/local/etc/redis/redis-sentinel-2.conf", "--sentinel" ]
@@ -48,9 +53,12 @@ services:
       - redis-master
     volumes:
       - ./redis-sentinel-2.conf:/usr/local/etc/redis/redis-sentinel-2.conf
+      - ./sentinel-data-2:/data
 
   redis-sentinel-3:
-    image: redis:7
+    build:
+      context: .
+      dockerfile: ./Dockerfile
     container_name: redis-sentinel-3
     network_mode: "host"
     command: [ "redis-server", "/usr/local/etc/redis/redis-sentinel-3.conf", "--sentinel" ]
@@ -58,3 +66,4 @@ services:
       - redis-master
     volumes:
       - ./redis-sentinel-3.conf:/usr/local/etc/redis/redis-sentinel-3.conf
+      - ./sentinel-data-3:/data
