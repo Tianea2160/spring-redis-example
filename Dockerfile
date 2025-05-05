@@ -1,30 +1,17 @@
-FROM ubuntu:22.04
+FROM eclipse-temurin:21-jdk-alpine as build
+WORKDIR /workspace/app
 
-# Avoid prompts from apt
-ENV DEBIAN_FRONTEND=noninteractive
+COPY gradle gradle
+COPY build.gradle.kts settings.gradle.kts gradlew ./
+COPY src src
 
-# Install Redis and sudo
-RUN apt-get update && apt-get install -y \
-    redis-server \
-    sudo \
-    && rm -rf /var/lib/apt/lists/*
+RUN ./gradlew bootJar -x test
+RUN mkdir -p build/libs/dependency && (cd build/libs/dependency; jar -xf ../*.jar)
 
-# Create necessary directories with proper permissions
-RUN mkdir -p /data /usr/local/etc/redis \
-    && chown -R redis:redis /data /usr/local/etc/redis \
-    && chmod -R 755 /data /usr/local/etc/redis
-
-# Add redis user to sudoers with NOPASSWD for redis-server
-RUN echo "redis ALL=(ALL) NOPASSWD: /usr/bin/redis-server" >> /etc/sudoers
-
-# Set working directory
-WORKDIR /data
-
-# Switch to redis user
-USER redis
-
-# Expose the Sentinel port
-EXPOSE 5001 5002 5003
-
-# Default command (will be overridden by docker-compose)
-CMD ["sudo", "redis-server", "/usr/local/etc/redis/redis-sentinel.conf", "--sentinel"]
+FROM eclipse-temurin:21-jre-alpine
+VOLUME /tmp
+ARG DEPENDENCY=/workspace/app/build/libs/dependency
+COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
+COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
+COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
+ENTRYPOINT ["java","-cp","app:app/lib/*","org.tianea.springredisexample.SpringRedisExampleApplicationKt"]

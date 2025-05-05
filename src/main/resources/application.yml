@@ -1,4 +1,17 @@
 spring:
-  config:
-    activate:
-      on-profile: dev
+  application:
+    name: spring-redis-example
+  redis:
+    timeout: 5000
+    password: test1234
+    sentinel:
+      master: mymaster
+      nodes: redis-sentinel-1:26379,redis-sentinel-2:26379,redis-sentinel-3:26379
+    
+server:
+  port: 8080
+  
+logging:
+  level:
+    org.springframework.data.redis: DEBUG
+    io.lettuce.core: DEBUG
