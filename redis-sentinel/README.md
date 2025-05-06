@@ -203,128 +203,128 @@ The Docker Compose configuration creates all necessary services:
 version: '3.8'
 
 services:
-  redis-master:
-    image: redis:7.4
-    container_name: redis-master
-    networks:
-      - redis-net
-    command: [ "redis-server", "/usr/local/etc/redis/redis-server.conf" ]
-    volumes:
-      - ./redis-server.conf:/usr/local/etc/redis/redis-server.conf
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "test1234", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 3
+   redis-master:
+      image: redis:7.4
+      container_name: redis-master
+      networks:
+         - redis-net
+      command: [ "redis-server", "/usr/local/etc/redis/redis-server.conf" ]
+      volumes:
+         - ./redis-server.conf:/usr/local/etc/redis/redis-server.conf
+      ports:
+         - "6379:6379"
+      healthcheck:
+         test: [ "CMD", "redis-cli", "-a", "test1234", "ping" ]
+         interval: 5s
+         timeout: 5s
+         retries: 3
 
-  redis-slave-1:
-    image: redis:7.4
-    container_name: redis-slave-1
-    networks:
-      - redis-net
-    command: [ "redis-server", "--replicaof", "redis-master", "6379", "--masterauth", "test1234", "--requirepass", "test1234" ]
-    depends_on:
-      redis-master:
-        condition: service_healthy
-    ports:
-      - "6380:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "test1234", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 3
+   redis-slave-1:
+      image: redis:7.4
+      container_name: redis-slave-1
+      networks:
+         - redis-net
+      command: [ "redis-server", "--replicaof", "redis-master", "6379", "--masterauth", "test1234", "--requirepass", "test1234" ]
+      depends_on:
+         redis-master:
+            condition: service_healthy
+      ports:
+         - "6380:6379"
+      healthcheck:
+         test: [ "CMD", "redis-cli", "-a", "test1234", "ping" ]
+         interval: 5s
+         timeout: 5s
+         retries: 3
 
-  redis-slave-2:
-    image: redis:7.4
-    container_name: redis-slave-2
-    networks:
-      - redis-net
-    command: [ "redis-server", "--replicaof", "redis-master", "6379", "--masterauth", "test1234", "--requirepass", "test1234" ]
-    depends_on:
-      redis-master:
-        condition: service_healthy
-    ports:
-      - "6381:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "test1234", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 3
+   redis-slave-2:
+      image: redis:7.4
+      container_name: redis-slave-2
+      networks:
+         - redis-net
+      command: [ "redis-server", "--replicaof", "redis-master", "6379", "--masterauth", "test1234", "--requirepass", "test1234" ]
+      depends_on:
+         redis-master:
+            condition: service_healthy
+      ports:
+         - "6381:6379"
+      healthcheck:
+         test: [ "CMD", "redis-cli", "-a", "test1234", "ping" ]
+         interval: 5s
+         timeout: 5s
+         retries: 3
 
-  redis-sentinel-1:
-    image: redis:7.4
-    container_name: redis-sentinel-1
-    networks:
-      - redis-net
-    command: [ "redis-sentinel", "/usr/local/etc/redis/redis-sentinel.conf" ]
-    depends_on:
-      redis-master:
-        condition: service_healthy
-      redis-slave-1:
-        condition: service_healthy
-      redis-slave-2:
-        condition: service_healthy
-    volumes:
-      - ./redis-sentinel.conf:/usr/local/etc/redis/redis-sentinel.conf
-    ports:
-      - "5001:26379"
+   redis-sentinel-1:
+      image: redis:7.4
+      container_name: redis-sentinel-1
+      networks:
+         - redis-net
+      command: [ "redis-sentinel", "/usr/local/etc/redis/redis-sentinel.conf" ]
+      depends_on:
+         redis-master:
+            condition: service_healthy
+         redis-slave-1:
+            condition: service_healthy
+         redis-slave-2:
+            condition: service_healthy
+      volumes:
+         - ./redis-sentinel.conf:/usr/local/etc/redis/redis-sentinel.conf
+      ports:
+         - "5001:26379"
 
-  redis-sentinel-2:
-    image: redis:7.4
-    container_name: redis-sentinel-2
-    networks:
-      - redis-net
-    command: [ "redis-sentinel", "/usr/local/etc/redis/redis-sentinel.conf" ]
-    depends_on:
-      redis-master:
-        condition: service_healthy
-      redis-slave-1:
-        condition: service_healthy
-      redis-slave-2:
-        condition: service_healthy
-    volumes:
-      - ./redis-sentinel.conf:/usr/local/etc/redis/redis-sentinel.conf
-    ports:
-      - "5002:26379"
+   redis-sentinel-2:
+      image: redis:7.4
+      container_name: redis-sentinel-2
+      networks:
+         - redis-net
+      command: [ "redis-sentinel", "/usr/local/etc/redis/redis-sentinel.conf" ]
+      depends_on:
+         redis-master:
+            condition: service_healthy
+         redis-slave-1:
+            condition: service_healthy
+         redis-slave-2:
+            condition: service_healthy
+      volumes:
+         - ./redis-sentinel.conf:/usr/local/etc/redis/redis-sentinel.conf
+      ports:
+         - "5002:26379"
 
-  redis-sentinel-3:
-    image: redis:7.4
-    container_name: redis-sentinel-3
-    networks:
-      - redis-net
-    command: [ "redis-sentinel", "/usr/local/etc/redis/redis-sentinel.conf" ]
-    depends_on:
-      redis-master:
-        condition: service_healthy
-      redis-slave-1:
-        condition: service_healthy
-      redis-slave-2:
-        condition: service_healthy
-    volumes:
-      - ./redis-sentinel.conf:/usr/local/etc/redis/redis-sentinel.conf
-    ports:
-      - "5003:26379"
+   redis-sentinel-3:
+      image: redis:7.4
+      container_name: redis-sentinel-3
+      networks:
+         - redis-net
+      command: [ "redis-sentinel", "/usr/local/etc/redis/redis-sentinel.conf" ]
+      depends_on:
+         redis-master:
+            condition: service_healthy
+         redis-slave-1:
+            condition: service_healthy
+         redis-slave-2:
+            condition: service_healthy
+      volumes:
+         - ./redis-sentinel.conf:/usr/local/etc/redis/redis-sentinel.conf
+      ports:
+         - "5003:26379"
 
-  app-server:
-    build: .
-    container_name: app-server
-    networks:
-      - redis-net
-    ports:
-      - "8080:8080"
-    depends_on:
-      redis-sentinel-1:
-        condition: service_started
-      redis-sentinel-2:
-        condition: service_started
-      redis-sentinel-3:
-        condition: service_started
+   app-server:
+      build: ..
+      container_name: app-server
+      networks:
+         - redis-net
+      ports:
+         - "8080:8080"
+      depends_on:
+         redis-sentinel-1:
+            condition: service_started
+         redis-sentinel-2:
+            condition: service_started
+         redis-sentinel-3:
+            condition: service_started
 
 networks:
-  redis-net:
-    driver: bridge
+   redis-net:
+      driver: bridge
 ```
 
 ## Running the Application
