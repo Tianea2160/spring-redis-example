@@ -1,4 +1,4 @@
-package org.tianea.springredisexample.config
+package org.tianea.redis.sentinel.config
 
 
 import org.junit.jupiter.api.Assertions.assertEquals

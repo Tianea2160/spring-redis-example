@@ -1,4 +1,4 @@
-package org.tianea.springredisexample.controller
+package org.tianea.redis.sentinel.controller
 
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.web.bind.annotation.*

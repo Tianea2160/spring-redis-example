@@ -1,4 +1,4 @@
-package org.tianea.springredisexample
+package org.tianea.redis.sentinel
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication

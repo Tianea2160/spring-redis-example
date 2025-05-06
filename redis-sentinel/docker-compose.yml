@@ -106,7 +106,7 @@ services:
       - "5003:26379"
 
   app-server:
-    build: ..
+    build: .
     container_name: app-server
     networks:
       - redis-net
