@@ -1,0 +1,113 @@
+version: '3.8'
+
+services:
+  redis-node-1:
+    image: redis:latest
+    container_name: redis-node-1
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis-node-1.conf:/usr/local/etc/redis/redis.conf
+      - redis-node-1-data:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - redis-net
+
+  redis-node-2:
+    image: redis:latest
+    container_name: redis-node-2
+    ports:
+      - "6380:6380"
+    volumes:
+      - ./redis-node-2.conf:/usr/local/etc/redis/redis.conf
+      - redis-node-2-data:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - redis-net
+
+  redis-node-3:
+    image: redis:latest
+    container_name: redis-node-3
+    ports:
+      - "6381:6381"
+    volumes:
+      - ./redis-node-3.conf:/usr/local/etc/redis/redis.conf
+      - redis-node-3-data:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - redis-net
+
+  redis-node-4:
+    image: redis:latest
+    container_name: redis-node-4
+    ports:
+      - "6382:6382"
+    volumes:
+      - ./redis-node-4.conf:/usr/local/etc/redis/redis.conf
+      - redis-node-4-data:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - redis-net
+
+  redis-node-5:
+    image: redis:latest
+    container_name: redis-node-5
+    ports:
+      - "6383:6383"
+    volumes:
+      - ./redis-node-5.conf:/usr/local/etc/redis/redis.conf
+      - redis-node-5-data:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - redis-net
+
+  redis-node-6:
+    image: redis:latest
+    container_name: redis-node-6
+    ports:
+      - "6384:6384"
+    volumes:
+      - ./redis-node-6.conf:/usr/local/etc/redis/redis.conf
+      - redis-node-6-data:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - redis-net
+# 레디스 구동 후 초기 클러스터 세팅을 위한 일회성 명령어 컨테이너
+  redis-cluster-init:
+    image: redis:latest
+    container_name: redis-cluster-init
+    command: >
+      bash -c "
+        sleep 20 &&
+        echo 'Creating Redis Cluster...' &&
+        (echo 'yes' | redis-cli -a redisauth --cluster create redis-node-1:6379 redis-node-2:6380 redis-node-3:6381 --cluster-replicas 0) &&
+        echo 'Adding slave nodes...' &&
+        sleep 5 &&
+        redis-cli -a redisauth --cluster add-node redis-node-4:6382 redis-node-1:6379 --cluster-slave &&
+        sleep 5 &&
+        redis-cli -a redisauth --cluster add-node redis-node-5:6383 redis-node-2:6380 --cluster-slave &&
+        sleep 5 &&
+        redis-cli -a redisauth --cluster add-node redis-node-6:6384 redis-node-3:6381 --cluster-slave &&
+        echo 'Redis Cluster setup completed successfully!'
+      "
+    networks:
+      - redis-net
+    depends_on:
+      - redis-node-1
+      - redis-node-2
+      - redis-node-3
+      - redis-node-4
+      - redis-node-5
+      - redis-node-6
+
+networks:
+  redis-net:
+    driver: bridge
+
+volumes:
+  redis-node-1-data:
+  redis-node-2-data:
+  redis-node-3-data:
+  redis-node-4-data:
+  redis-node-5-data:
+  redis-node-6-data:
