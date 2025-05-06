@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: redis-cluster
+  redis:
+    cluster:
+      nodes: redis-node-1:6379,redis-node-2:6380,redis-node-3:6381,redis-node-4:6382,redis-node-5:6383,redis-node-6:6384
+    password: redisauth
+    timeout: 60000
+
+server:
+  port: 8080

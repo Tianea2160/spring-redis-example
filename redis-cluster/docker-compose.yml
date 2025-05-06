@@ -99,7 +99,11 @@ services:
       - redis-node-4
       - redis-node-5
       - redis-node-6
-
+#  redis-app:
+#    build: .
+#    container_name: redis-app
+#    ports:
+#      - "8080:8080"
 networks:
   redis-net:
     driver: bridge
