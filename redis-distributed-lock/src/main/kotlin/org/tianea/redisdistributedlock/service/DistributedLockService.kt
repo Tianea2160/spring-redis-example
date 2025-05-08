@@ -24,7 +24,7 @@ class DistributedLockService(
      */
     fun tryLock(key: String, waitTime: Long, leaseTime: Long, timeUnit: TimeUnit): Boolean {
         try {
-            logger.debug("get lock key: {}", key)
+            logger.debug("Get lock key: {}", key)
             val lock = redissonClient.getLock(key)
             threadLocal.set(lock)
 

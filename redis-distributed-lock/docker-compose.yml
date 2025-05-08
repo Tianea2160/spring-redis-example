@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis-distributed-lock
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    restart: always
+    networks:
+      - redis-network
+networks:
+  redis-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local

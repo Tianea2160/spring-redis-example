@@ -3,28 +3,40 @@ package org.tianea.redisdistributedlock.config
 import org.redisson.Redisson
 import org.redisson.api.RedissonClient
 import org.redisson.config.Config
-import org.redisson.spring.starter.RedissonAutoConfigurationCustomizer
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 
 /**
- * Redisson 추가 구성을 위한 설정 클래스
- * application.yml의 redisson 설정을 기반으로 함
+ * Redisson 구성을 위한 설정 클래스
  */
 @Configuration
 class RedissonConfig {
 
+    @Value("\${spring.data.redis.host:localhost}")
+    private lateinit var redisHost: String
+
+    @Value("\${spring.data.redis.port:6379}")
+    private var redisPort: Int = 0
+
     /**
-     * Redisson 자동 구성을 커스터마이징
-     * 이미 RedissonAutoConfiguration이 application.yml 설정을 로드함
+     * RedissonClient 빈 생성
      */
     @Bean
-    fun redissonCustomizer(): RedissonAutoConfigurationCustomizer {
-        return RedissonAutoConfigurationCustomizer { config ->
-            // watchdog 설정 활성화 (락 자동 갱신)
-            config.lockWatchdogTimeout = 30000 // 30초
-            
-            // 필요한 경우 추가 커스터마이징 가능
-        }
+    @Primary
+    fun redissonClient(): RedissonClient {
+        val config = Config()
+        config.useSingleServer()
+            .setAddress("redis://$redisHost:$redisPort")
+            .setConnectionMinimumIdleSize(5)
+            .setConnectionPoolSize(10)
+            .setConnectTimeout(3000)
+
+        // 락 Watchdog 타임아웃 설정 (30초)
+        // 락을 획득한 스레드가 살아있으면 자동으로 락을 갱신
+        config.lockWatchdogTimeout = 30000
+
+        return Redisson.create(config)
     }
 }
