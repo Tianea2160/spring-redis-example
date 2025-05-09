@@ -1,5 +1,6 @@
 package org.tianea.redisdistributedlock.aop
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
@@ -12,6 +13,8 @@ import org.tianea.redisdistributedlock.exception.DistributedLockException
 import java.lang.Thread.sleep
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
+import kotlin.time.Duration
+import kotlin.time.measureTime
 
 @SpringBootTest
 @ExtendWith(SpringExtension::class)
@@ -37,6 +40,21 @@ class DistributedLockAspectIntegrationTest
             testService.testWithSleep("hello world")
         }
     }
+
+    @Test
+    fun `waiting time test`() {
+        val measureTime = measureTime {
+            thread { testService.testWithWaitingTime("hello world") }
+            thread { testService.testWithWaitingTime("hello world") }
+            thread { testService.testWithWaitingTime("hello world") }
+            thread { testService.testWithWaitingTime("hello world") }
+            thread { testService.testWithWaitingTime("hello world") }
+
+            testService.testWithWaitingTime("hello world")
+        }
+
+        assertThat(measureTime > Duration.parse("PT5S")) //  5s
+    }
 }
 
 
@@ -53,5 +71,10 @@ class TestService {
     fun testWithSleep(param1: String) {
         logger.info("test with sleep, param1: $param1")
         sleep(1000)
+    }
+
+    @DistributedLock(key = "#param1", leaseTime = 1L, waitTime = 1L, timeUnit = TimeUnit.SECONDS)
+    fun testWithWaitingTime(param1: String) {
+        logger.info("test with waiting param1: $param1")
     }
 }
