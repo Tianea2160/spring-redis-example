@@ -1,10 +1,11 @@
 # Redis High Availability Solutions
 
-This repository contains implementations of three Redis high availability and distributed patterns using Spring Boot, Kotlin, and Docker:
+This repository contains implementations of four Redis high availability, caching, and distributed patterns using Spring Boot, Kotlin, and Docker:
 
-1. **Redis Cluster** - A distributed implementation with sharding across multiple nodes
-2. **Redis Sentinel** - A monitoring and automatic failover solution
-3. **Redis Distributed Lock** - A distributed lock implementation using Redis and Redisson
+1. **Redis Cache** - A caching solution for improved application performance
+2. **Redis Cluster** - A distributed implementation with sharding across multiple nodes
+3. **Redis Sentinel** - A monitoring and automatic failover solution
+4. **Redis Distributed Lock** - A distributed lock implementation using Redis and Redisson
 
 All solutions are configured for easy deployment using Docker Compose and provide examples for integration with Spring Boot applications in Kotlin.
 
@@ -12,6 +13,11 @@ All solutions are configured for easy deployment using Docker Compose and provid
 
 ```
 .
+├── redis-cache/            # Redis Caching implementation
+│   ├── docker-compose.yml  # Redis & PostgreSQL Docker configuration
+│   ├── src/                # Source code with caching examples
+│   └── README.md           # Detailed instructions for Redis Cache
+│
 ├── redis-cluster/          # Redis Cluster implementation
 │   ├── docker-compose.yml  # Cluster Docker configuration
 │   ├── redis-node-*.conf   # Configuration files for cluster nodes
@@ -32,6 +38,23 @@ All solutions are configured for easy deployment using Docker Compose and provid
 ```
 
 ## Overview of Solutions
+
+### Redis Cache
+
+Redis Cache provides a simple yet powerful way to implement caching in Spring Boot applications. It offers:
+
+- **Performance Improvement**: Reduce database load by caching frequently accessed data
+- **Annotation-based Caching**: Easy-to-use Spring Cache annotations (@Cacheable, @CachePut, @CacheEvict)
+- **Time-To-Live (TTL)**: Configurable expiration for cached data
+- **Serialization Options**: JSON-based serialization for complex objects
+
+Our implementation includes:
+- Complete Article entity CRUD example with caching
+- Integration with PostgreSQL for persistent storage
+- Redis configuration with TTL settings
+- Docker Compose setup for both Redis and PostgreSQL
+
+[Visit Redis Cache directory](./redis-cache) for detailed instructions.
 
 ### Redis Cluster
 
@@ -82,13 +105,13 @@ Our implementation includes:
 
 ## Choosing Between Solutions
 
-| Feature | Redis Cluster | Redis Sentinel | Redis Distributed Lock |
-|---------|---------------|----------------|------------------------|
-| Primary purpose | Data sharding + HA | High availability | Distributed synchronization |
-| Complexity | Higher | Lower | Medium |
-| Data distribution | Automatic sharding | No sharding (full replicas) | N/A |
-| Typical use case | Large datasets, high throughput | Smaller datasets, HA priority | Distributed application coordination |
-| Node minimum | 6 (3 masters + 3 slaves) | 3 (1 master + 2 slaves) + sentinels | 1 (standalone Redis) |
+| Feature | Redis Cache | Redis Cluster | Redis Sentinel | Redis Distributed Lock |
+|---------|-------------|---------------|----------------|------------------------|
+| Primary purpose | Performance improvement | Data sharding + HA | High availability | Distributed synchronization |
+| Complexity | Low | Higher | Lower | Medium |
+| Data distribution | No sharding (single instance) | Automatic sharding | No sharding (full replicas) | N/A |
+| Typical use case | Reducing DB load | Large datasets, high throughput | Smaller datasets, HA priority | Distributed application coordination |
+| Node minimum | 1 (standalone Redis) | 6 (3 masters + 3 slaves) | 3 (1 master + 2 slaves) + sentinels | 1 (standalone Redis) |
 
 ## Prerequisites
 
@@ -101,6 +124,8 @@ Our implementation includes:
 - **Kotlin 1.9.25**
 - **Spring Boot 3.4.5**
 - **Spring Data Redis**
+- **Spring Data JPA**
+- **PostgreSQL**
 - **Redisson 3.46.0**
 - **Redis 7.x**
 - **Docker & Docker Compose**
