@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.stereotype.Component
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import org.tianea.redisdistributedlock.aop.LockFailureStrategy.EXECUTE_FALLBACK
 import org.tianea.redisdistributedlock.exception.DistributedLockException
 import java.lang.Thread.sleep
 import java.util.concurrent.TimeUnit
@@ -55,6 +56,16 @@ class DistributedLockAspectIntegrationTest
 
         assertThat(measureTime > Duration.parse("PT5S")) //  5s
     }
+
+    @Test
+    fun `fallback method test`() {
+        thread {
+            testService.testWithFallBack("hello world")
+        }
+        sleep(100)
+
+        testService.testWithFallBack("hello world")
+    }
 }
 
 
@@ -76,5 +87,22 @@ class TestService {
     @DistributedLock(key = "#param1", leaseTime = 1L, waitTime = 1L, timeUnit = TimeUnit.SECONDS)
     fun testWithWaitingTime(param1: String) {
         logger.info("test with waiting param1: $param1")
+    }
+
+    @DistributedLock(
+        key = "#param1",
+        waitTime = 0L,
+        leaseTime = 2L,
+        timeUnit = TimeUnit.SECONDS,
+        failureStrategy = EXECUTE_FALLBACK,
+        fallbackMethod = "fallback"
+    )
+    fun testWithFallBack(param1: String) {
+        logger.info("test with fallback param1: $param1")
+        sleep(2000)
+    }
+
+    fun fallback(param1: String) {
+        logger.info("fallback method: $param1")
     }
 }
