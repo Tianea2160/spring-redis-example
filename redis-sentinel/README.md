@@ -36,28 +36,31 @@ The project is structured as follows:
 - Docker and Docker Compose
 - Kotlin
 
-## Project Structure
+## Getting Started
 
-```
-spring-redis-example/
-├── src/
-│   ├── main/
-│   │   ├── kotlin/
-│   │   │   └── org/tianea/springredisexample/
-│   │   │       ├── config/
-│   │   │       │   └── RedisConfig.kt
-│   │   │       ├── controller/
-│   │   │       │   └── RedisController.kt
-│   │   │       └── SpringRedisExampleApplication.kt
-│   │   └── resources/
-│   │       └── application.yml
-│   └── test/
-├── redis-server.conf
-├── redis-sentinel.conf
-├── docker-compose.yml
-├── Dockerfile
-└── build.gradle.kts
-```
+1. **Start Redis containers**:
+   ```bash
+   cd redis-sentinel
+   docker-compose up -d
+   ```
+   This will start one master Redis node, two slave nodes, three Sentinel nodes, and the Spring Boot application.
+
+2. **Verify that all services are running**:
+   ```bash
+   docker-compose ps
+   ```
+
+3. **Test the application**:
+   ```bash
+   # Check Redis connection
+   curl http://localhost:8080/redis/ping
+   
+   # Set a key-value pair
+   curl -X POST "http://localhost:8080/redis/set?key=test&value=hello"
+   
+   # Get the value for a key
+   curl "http://localhost:8080/redis/get?key=test"
+   ```
 
 ## Configuration
 
@@ -111,246 +114,6 @@ logging:
     org.springframework.data.redis: DEBUG
     io.lettuce.core: DEBUG
 ```
-
-### Spring Redis Connection Configuration (RedisConfig.kt)
-
-The Spring application is configured to connect to Redis through Sentinel:
-
-```kotlin
-@Configuration
-class RedisConfig {
-
-    @Value("\${spring.redis.sentinel.master}")
-    private lateinit var master: String
-
-    @Value("\${spring.redis.sentinel.nodes}")
-    private lateinit var sentinelNodes: String
-
-    @Value("\${spring.redis.password}")
-    private lateinit var password: String
-
-    @Value("\${spring.redis.timeout}")
-    private var timeout: Long = 5000
-
-    @Bean
-    fun redisConnectionFactory(): RedisConnectionFactory {
-        val sentinelConfig = RedisSentinelConfiguration()
-
-        sentinelConfig.master(master)
-        sentinelConfig.setPassword(password)
-        sentinelConfig
-            .apply {
-                sentinelNodes.split(",").forEach { node ->
-                    val parts = node.split(":")
-                    val host = parts[0]
-                    val port = if (parts.size > 1) parts[1].toInt() else 26379
-                    sentinel(host, port)
-                }
-            }
-
-        val clientConfig = LettuceClientConfiguration.builder()
-            .commandTimeout(Duration.ofMillis(timeout))
-            .build()
-
-        return LettuceConnectionFactory(sentinelConfig, clientConfig)
-    }
-
-    @Bean
-    fun redisTemplate(): RedisTemplate<String, Any> {
-        val template = RedisTemplate<String, Any>()
-        template.connectionFactory = redisConnectionFactory()
-        template.keySerializer = StringRedisSerializer()
-        template.valueSerializer = StringRedisSerializer()
-        template.hashKeySerializer = StringRedisSerializer()
-        template.hashValueSerializer = StringRedisSerializer()
-        return template
-    }
-}
-```
-
-### Redis Controller (RedisController.kt)
-
-A simple controller to test Redis connectivity:
-
-```kotlin
-@RestController
-@RequestMapping("/redis")
-class RedisController(private val redisTemplate: RedisTemplate<String, Any>) {
-
-    @GetMapping("/ping")
-    fun ping(): String {
-        return "Connected to Redis: ${redisTemplate.connectionFactory?.connection?.ping() ?: "Not connected"}"
-    }
-
-    @PostMapping("/set")
-    fun setValue(@RequestParam key: String, @RequestParam value: String): String {
-        redisTemplate.opsForValue().set(key, value)
-        return "Value set successfully"
-    }
-
-    @GetMapping("/get")
-    fun getValue(@RequestParam key: String): String {
-        return redisTemplate.opsForValue().get(key)?.toString() ?: "Key not found"
-    }
-}
-```
-
-## Docker Compose Setup (docker-compose.yml)
-
-The Docker Compose configuration creates all necessary services:
-
-```yaml
-version: '3.8'
-
-services:
-   redis-master:
-      image: redis:7.4
-      container_name: redis-master
-      networks:
-         - redis-net
-      command: [ "redis-server", "/usr/local/etc/redis/redis-server.conf" ]
-      volumes:
-         - ./redis-server.conf:/usr/local/etc/redis/redis-server.conf
-      ports:
-         - "6379:6379"
-      healthcheck:
-         test: [ "CMD", "redis-cli", "-a", "test1234", "ping" ]
-         interval: 5s
-         timeout: 5s
-         retries: 3
-
-   redis-slave-1:
-      image: redis:7.4
-      container_name: redis-slave-1
-      networks:
-         - redis-net
-      command: [ "redis-server", "--replicaof", "redis-master", "6379", "--masterauth", "test1234", "--requirepass", "test1234" ]
-      depends_on:
-         redis-master:
-            condition: service_healthy
-      ports:
-         - "6380:6379"
-      healthcheck:
-         test: [ "CMD", "redis-cli", "-a", "test1234", "ping" ]
-         interval: 5s
-         timeout: 5s
-         retries: 3
-
-   redis-slave-2:
-      image: redis:7.4
-      container_name: redis-slave-2
-      networks:
-         - redis-net
-      command: [ "redis-server", "--replicaof", "redis-master", "6379", "--masterauth", "test1234", "--requirepass", "test1234" ]
-      depends_on:
-         redis-master:
-            condition: service_healthy
-      ports:
-         - "6381:6379"
-      healthcheck:
-         test: [ "CMD", "redis-cli", "-a", "test1234", "ping" ]
-         interval: 5s
-         timeout: 5s
-         retries: 3
-
-   redis-sentinel-1:
-      image: redis:7.4
-      container_name: redis-sentinel-1
-      networks:
-         - redis-net
-      command: [ "redis-sentinel", "/usr/local/etc/redis/redis-sentinel.conf" ]
-      depends_on:
-         redis-master:
-            condition: service_healthy
-         redis-slave-1:
-            condition: service_healthy
-         redis-slave-2:
-            condition: service_healthy
-      volumes:
-         - ./redis-sentinel.conf:/usr/local/etc/redis/redis-sentinel.conf
-      ports:
-         - "5001:26379"
-
-   redis-sentinel-2:
-      image: redis:7.4
-      container_name: redis-sentinel-2
-      networks:
-         - redis-net
-      command: [ "redis-sentinel", "/usr/local/etc/redis/redis-sentinel.conf" ]
-      depends_on:
-         redis-master:
-            condition: service_healthy
-         redis-slave-1:
-            condition: service_healthy
-         redis-slave-2:
-            condition: service_healthy
-      volumes:
-         - ./redis-sentinel.conf:/usr/local/etc/redis/redis-sentinel.conf
-      ports:
-         - "5002:26379"
-
-   redis-sentinel-3:
-      image: redis:7.4
-      container_name: redis-sentinel-3
-      networks:
-         - redis-net
-      command: [ "redis-sentinel", "/usr/local/etc/redis/redis-sentinel.conf" ]
-      depends_on:
-         redis-master:
-            condition: service_healthy
-         redis-slave-1:
-            condition: service_healthy
-         redis-slave-2:
-            condition: service_healthy
-      volumes:
-         - ./redis-sentinel.conf:/usr/local/etc/redis/redis-sentinel.conf
-      ports:
-         - "5003:26379"
-
-   app-server:
-      build: ..
-      container_name: app-server
-      networks:
-         - redis-net
-      ports:
-         - "8080:8080"
-      depends_on:
-         redis-sentinel-1:
-            condition: service_started
-         redis-sentinel-2:
-            condition: service_started
-         redis-sentinel-3:
-            condition: service_started
-
-networks:
-   redis-net:
-      driver: bridge
-```
-
-## Running the Application
-
-1. **Start Redis containers**:
-   ```bash
-   docker-compose up -d
-   ```
-   This will start one master Redis node, two slave nodes, three Sentinel nodes, and the Spring Boot application.
-
-2. **Verify that all services are running**:
-   ```bash
-   docker-compose ps
-   ```
-
-3. **Test the application**:
-   ```bash
-   # Check Redis connection
-   curl http://localhost:8080/redis/ping
-   
-   # Set a key-value pair
-   curl -X POST "http://localhost:8080/redis/set?key=test&value=hello"
-   
-   # Get the value for a key
-   curl "http://localhost:8080/redis/get?key=test"
-   ```
 
 ## Testing Failover
 
@@ -423,7 +186,3 @@ To test the Redis Sentinel failover mechanism:
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Author
-
-tianea

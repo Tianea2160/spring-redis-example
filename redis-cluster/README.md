@@ -1,6 +1,6 @@
 # Redis Cluster Setup Guide
 
-This project provides an easy way to set up a Redis Cluster with 6 nodes (3 masters + 3 slaves) using Docker Compose.
+This project provides an easy way to set up a Redis Cluster with 6 nodes (3 masters + 3 slaves) using Docker Compose and Spring Boot integration.
 
 ## Components
 
@@ -8,6 +8,7 @@ This project provides an easy way to set up a Redis Cluster with 6 nodes (3 mast
   - 3 master nodes (redis-node-1, redis-node-2, redis-node-3)
   - 3 slave nodes (redis-node-4, redis-node-5, redis-node-6)
 - **Cluster Initialization**: Automates Redis cluster creation and slave node attachment
+- **Spring Boot Application**: Provides a REST API to interact with the Redis Cluster
 
 ## Getting Started
 
@@ -15,29 +16,32 @@ This project provides an easy way to set up a Redis Cluster with 6 nodes (3 mast
 
 - Docker
 - Docker Compose
+- JDK 21
+- Gradle 8.x
 
 ### Installation and Setup
 
-1. Clone the repository.
+1. Start the Redis cluster using Docker Compose.
 ```bash
-git clone <repository-url>
 cd redis-cluster
-```
-
-2. Start the Redis cluster.
-```bash
 docker-compose up -d
 ```
 
-3. Check the cluster initialization progress.
+2. Check the cluster initialization progress.
 ```bash
 docker logs -f redis-cluster-init
 ```
 
-4. Once the cluster is successfully configured, you can check its status with:
+3. Once the cluster is successfully configured, you can check its status with:
 ```bash
 docker exec -it redis-node-1 redis-cli -a redisauth cluster nodes
 docker exec -it redis-node-1 redis-cli -a redisauth cluster info
+```
+
+4. Build and run the Spring Boot application.
+```bash
+./gradlew build
+java -jar build/libs/redis-cluster-0.0.1-SNAPSHOT.jar
 ```
 
 ## Cluster Configuration Details
@@ -63,18 +67,27 @@ docker exec -it redis-node-1 redis-cli -a redisauth cluster info
 - All Redis nodes are protected with the password `redisauth`
 - You must use the `-a redisauth` option when executing Redis cluster commands
 
-## Using with Applications
+## Testing the Application
 
-### Spring Boot (Kotlin)
+You can use the following endpoints to test the Redis Cluster integration:
 
-application.properties:
-```properties
-spring.redis.cluster.nodes=redis-node-1:6379,redis-node-2:6380,redis-node-3:6381
-spring.redis.password=redisauth
-spring.redis.timeout=60000
+```bash
+# Test connection to Redis Cluster
+curl http://localhost:8080/api/redis/test
+
+# Set a value
+curl -X POST "http://localhost:8080/api/redis/set?key=mykey&value=myvalue"
+
+# Get a value
+curl http://localhost:8080/api/redis/get/mykey
 ```
 
-### Configuration Class:
+## Spring Boot Integration Details
+
+### Configuration Class
+
+The application uses the following configuration to connect to the Redis Cluster:
+
 ```kotlin
 @Configuration
 class RedisConfig {
@@ -101,6 +114,24 @@ class RedisConfig {
         return template
     }
 }
+```
+
+### Application Properties
+
+The application connects to the Redis Cluster using the following properties:
+
+```yaml
+spring:
+  application:
+    name: redis-cluster
+  redis:
+    cluster:
+      nodes: redis-node-1:6379,redis-node-2:6380,redis-node-3:6381,redis-node-4:6382,redis-node-5:6383,redis-node-6:6384
+    password: redisauth
+    timeout: 60000
+
+server:
+  port: 8080
 ```
 
 ## Cluster Management
@@ -146,12 +177,6 @@ Configuration files for each Redis node, including:
 - Sets up volumes and networking for each node
 - Automates the cluster initialization process
 
-## Limitations
-
-- The default configuration is for development and testing environments; additional security settings are needed for production
-- Redis clusters require a minimum of 3 master nodes
-- Each master node should have at least one slave for availability
-
 ## Troubleshooting
 
 ### Cluster Initialization Failure
@@ -171,6 +196,12 @@ Verify that all nodes are on the same network:
 ```bash
 docker network inspect redis-cluster_redis-net
 ```
+
+## Limitations
+
+- The default configuration is for development and testing environments; additional security settings are needed for production
+- Redis clusters require a minimum of 3 master nodes
+- Each master node should have at least one slave for availability
 
 ## License
 

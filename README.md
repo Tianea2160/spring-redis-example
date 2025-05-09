@@ -1,12 +1,12 @@
 # Redis High Availability Solutions
 
-This repository contains implementations of two Redis high availability solutions using Docker and a distributed lock implementation:
+This repository contains implementations of three Redis high availability and distributed patterns using Spring Boot, Kotlin, and Docker:
 
 1. **Redis Cluster** - A distributed implementation with sharding across multiple nodes
 2. **Redis Sentinel** - A monitoring and automatic failover solution
 3. **Redis Distributed Lock** - A distributed lock implementation using Redis and Redisson
 
-All solutions are configured for easy deployment using Docker Compose and provide examples for integration with Java/Kotlin applications.
+All solutions are configured for easy deployment using Docker Compose and provide examples for integration with Spring Boot applications in Kotlin.
 
 ## Repository Structure
 
@@ -19,9 +19,8 @@ All solutions are configured for easy deployment using Docker Compose and provid
 │
 ├── redis-sentinel/         # Redis Sentinel implementation
 │   ├── docker-compose.yml  # Sentinel Docker configuration
-│   ├── redis-master.conf   # Master configuration
-│   ├── redis-slave.conf    # Slave configuration
-│   ├── sentinel.conf       # Sentinel configuration
+│   ├── redis-server.conf   # Master configuration
+│   ├── redis-sentinel.conf # Sentinel configuration
 │   └── README.md           # Detailed instructions for Redis Sentinel
 │
 ├── redis-distributed-lock/ # Redis Distributed Lock implementation
@@ -29,7 +28,7 @@ All solutions are configured for easy deployment using Docker Compose and provid
 │   ├── build.gradle.kts    # Gradle build file
 │   └── README.md           # Detailed instructions for Redis Distributed Lock
 │ 
-└── docker-compose.yml      # Docker Compose for standalone Redis (for distributed lock)
+└── README.md               # This file
 ```
 
 ## Overview of Solutions
@@ -91,48 +90,20 @@ Our implementation includes:
 | Typical use case | Large datasets, high throughput | Smaller datasets, HA priority | Distributed application coordination |
 | Node minimum | 6 (3 masters + 3 slaves) | 3 (1 master + 2 slaves) + sentinels | 1 (standalone Redis) |
 
-## Getting Started with Distributed Lock
-
-To use the Redis Distributed Lock module:
-
-1. Start Redis using the provided Docker Compose file:
-
-```bash
-docker-compose up -d
-```
-
-This will start a Redis server on port 6379 and Redis Commander UI on port 8081.
-
-2. Run the Spring Boot application with the distributed lock module:
-
-```bash
-cd redis-distributed-lock
-./gradlew bootRun
-```
-
-3. Test the distributed lock API endpoints:
-
-```bash
-# Example 1: Basic distributed lock (THROW_EXCEPTION strategy)
-curl "http://localhost:8080/api/users/123/process?data=testData"
-
-# Example 2: Retry strategy
-curl "http://localhost:8080/api/orders?userId=user1&itemId=item1&quantity=5"
-
-# Example 3: Fallback strategy
-curl "http://localhost:8080/api/reports/report1?userId=user1"
-
-# Example 4: Skip strategy (for read-only operations)
-curl "http://localhost:8080/api/statistics/stat1"
-```
-
-4. You can view Redis data using Redis Commander at http://localhost:8081
-
 ## Prerequisites
 
 - Docker and Docker Compose installed
 - JDK 21 or higher
 - Gradle 8.x or higher
+
+## Technology Stack
+
+- **Kotlin 1.9.25**
+- **Spring Boot 3.4.5**
+- **Spring Data Redis**
+- **Redisson 3.46.0**
+- **Redis 7.x**
+- **Docker & Docker Compose**
 
 ## License
 
