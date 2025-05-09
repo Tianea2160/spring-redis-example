@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.stereotype.Component
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.tianea.redisdistributedlock.aop.LockFailureStrategy.EXECUTE_FALLBACK
+import org.tianea.redisdistributedlock.config.TestRedisContainerConfig
 import org.tianea.redisdistributedlock.exception.DistributedLockException
 import java.lang.Thread.sleep
 import java.util.concurrent.TimeUnit
@@ -19,7 +20,7 @@ import kotlin.time.Duration
 import kotlin.time.measureTime
 
 @SpringBootTest
-@ExtendWith(SpringExtension::class)
+@ExtendWith(SpringExtension::class, TestRedisContainerConfig::class)
 class DistributedLockAspectIntegrationTest
 @Autowired constructor(
     private val testService: TestService,
