@@ -66,6 +66,13 @@ class DistributedLockAspectIntegrationTest
 
         testService.testWithFallBack("hello world")
     }
+
+    @Test
+    fun `exception method test`() {
+        assertThrows<IllegalStateException> {
+            testService.testWithException("hello world")
+        }
+    }
 }
 
 
@@ -104,5 +111,11 @@ class TestService {
 
     fun fallback(param1: String) {
         logger.info("fallback method: $param1")
+    }
+
+    @DistributedLock(key = "#param1")
+    fun testWithException(param1: String) {
+        logger.info("test with exception method: $param1")
+        throw IllegalStateException("test with exception method: $param1")
     }
 }
