@@ -12,7 +12,6 @@ import org.tianea.redisdistributedlock.service.DistributedLockService
 import java.lang.reflect.Method
 
 @Aspect
-@Order(1) // 트랜잭션 어드바이스보다 먼저 실행되도록 함
 @Component
 class DistributedLockAspect(
     private val distributedLockService: DistributedLockService,
