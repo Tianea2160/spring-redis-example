@@ -38,18 +38,10 @@ class DistributedLockAspect(
 
         // 락 획득 실패 시 전략에 따라 처리
         return when (distributedLock.failureStrategy) {
-            LockFailureStrategy.THROW_EXCEPTION -> executeWithLockOrThrow(
-                joinPoint, lockKey, distributedLock
-            )
-            LockFailureStrategy.RETRY -> executeWithRetry(
-                joinPoint, lockKey, distributedLock
-            )
-            LockFailureStrategy.EXECUTE_FALLBACK -> executeWithFallback(
-                joinPoint, lockKey, distributedLock
-            )
-            LockFailureStrategy.SKIP -> executeWithSkip(
-                joinPoint, lockKey, distributedLock
-            )
+            LockFailureStrategy.THROW_EXCEPTION -> executeWithLockOrThrow(joinPoint, lockKey, distributedLock)
+            LockFailureStrategy.RETRY -> executeWithRetry(joinPoint, lockKey, distributedLock)
+            LockFailureStrategy.EXECUTE_FALLBACK -> executeWithFallback(joinPoint, lockKey, distributedLock)
+            LockFailureStrategy.SKIP -> executeWithSkip(joinPoint, lockKey, distributedLock)
         }
     }
 
@@ -117,7 +109,7 @@ class DistributedLockAspect(
 
             retryCount++
             // 재시도 간격을 지수적으로 증가 (지수 백오프)
-            val sleepTime = Math.min(1000L * (1L shl retryCount), 10000L)
+            val sleepTime = (1000L * (1L shl retryCount)).coerceAtMost(10000L)
             Thread.sleep(sleepTime)
         }
 
@@ -247,7 +239,7 @@ class DistributedLockAspect(
             val paramType = paramTypes[i]
             val arg = args[i]
 
-            if (arg != null && !paramType.isAssignableFrom(arg.javaClass)) {
+            if (!paramType.isAssignableFrom(arg.javaClass)) {
                 return false
             }
         }
